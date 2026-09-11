@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interview Docket</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f3f6f7; --surface:#ffffff; --surface-2:#eaeff0; --ink:#131a1d; --ink-soft:#3d4a4e;
+  --muted:#657377; --line:#d7e0e2; --shadow: rgba(19,26,29,.08);
+  --accent:#0e6e76; --accent-ink:#08464b; --accent-soft:#e1f0f0;
+  --amber:#8f640b; --amber-soft:#faf0d9;
+  --blue:#2f5a80; --blue-soft:#e6edf4;
+  --gray:#767f83; --gray-soft:#eceff0;
+  --green:#2c7a4d; --green-soft:#e2f2e8;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1416; --surface:#161d20; --surface-2:#1b2225; --ink:#e7edee; --ink-soft:#c1cccf;
+    --muted:#889599; --line:#293336; --shadow: rgba(0,0,0,.35);
+    --accent:#3fb7bd; --accent-ink:#bdecef; --accent-soft:#132d2f;
+    --amber:#dda94a; --amber-soft:#2b2312;
+    --blue:#7ea6cf; --blue-soft:#1b2733;
+    --gray:#8a9599; --gray-soft:#1c2426;
+    --green:#7cbb92; --green-soft:#132a1c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1416; --surface:#161d20; --surface-2:#1b2225; --ink:#e7edee; --ink-soft:#c1cccf;
+  --muted:#889599; --line:#293336; --shadow: rgba(0,0,0,.35);
+  --accent:#3fb7bd; --accent-ink:#bdecef; --accent-soft:#132d2f;
+  --amber:#dda94a; --amber-soft:#2b2312;
+  --blue:#7ea6cf; --blue-soft:#1b2733;
+  --gray:#8a9599; --gray-soft:#1c2426;
+  --green:#7cbb92; --green-soft:#132a1c;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Public Sans", ui-sans-serif, system-ui, sans-serif;
+  padding: 28px 16px 80px;
+}
+.wrap{max-width:920px; margin:0 auto;}
+.mono{font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;}
+.topbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+  flex-wrap:wrap; margin-bottom:6px; padding-bottom:18px; border-bottom:1px solid var(--line);
+}
+h1{
+  font-family:"Newsreader", Georgia, serif; font-weight:600; font-style:italic;
+  font-size:clamp(1.7rem, 4vw, 2.35rem); margin:0; text-wrap:balance; color:var(--ink);
+}
+.subtitle{margin:6px 0 0; color:var(--muted); font-size:.92rem; max-width:46ch;}
+.save-indicator{
+  font-family:"IBM Plex Mono", monospace; font-size:.72rem; letter-spacing:.03em;
+  color:var(--muted); text-transform:uppercase; white-space:nowrap; padding-bottom:4px;
+  display:flex; align-items:center; gap:6px;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none;}
+.save-indicator[data-state="saved"] .dot{background:var(--green);}
+.save-indicator[data-state="saving"] .dot{background:var(--amber);}
+.save-indicator[data-state="error"] .dot, .save-indicator[data-state="offline"] .dot{background:#b25454;}
+
+.legend{display:flex; gap:14px; flex-wrap:wrap; margin:16px 0 22px; font-size:.78rem; color:var(--muted);}
+.legend span{display:inline-flex; align-items:center; gap:6px;}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+.provenance{
+  background:var(--surface-2); border:1px solid var(--line); border-radius:10px;
+  padding:12px 14px; font-size:.82rem; color:var(--ink-soft); line-height:1.5; margin-bottom:26px;
+}
+.provenance b{color:var(--ink);}
+
+.stack{display:flex; flex-direction:column; gap:16px;}
+
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  box-shadow:0 1px 2px var(--shadow); overflow:hidden;
+}
+.card[data-status="rejected"]{opacity:.72;}
+.card-head{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:14px 18px;
+}
+.card.is-open .card-head{border-bottom:1px solid var(--line);}
+.toggle-btn{
+  flex:none; width:26px; height:26px; border-radius:7px; border:1px solid var(--line);
+  background:var(--surface-2); color:var(--muted); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:.7rem; transition:transform .15s ease;
+}
+.card.is-open .toggle-btn{transform:rotate(90deg); color:var(--accent);}
+.company-no{
+  flex:none; font-family:"IBM Plex Mono", monospace; font-size:.72rem; color:var(--muted);
+  background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:3px 7px;
+}
+.card-summary{
+  padding:0 18px 14px 54px; margin-top:-8px; color:var(--muted); font-size:.82rem;
+}
+.card-summary b{color:var(--ink-soft); font-weight:600;}
+.card-body[hidden]{display:none;}
+.name-input{
+  font-family:"Newsreader", Georgia, serif; font-weight:600; font-size:1.32rem; color:var(--ink);
+  border:none; background:transparent; padding:2px 0; min-width:120px; flex:1 1 180px;
+}
+.name-input:focus{outline:none; border-bottom:1px dashed var(--muted);}
+.role-input{
+  border:none; background:transparent; color:var(--muted); font-size:.86rem; width:100%;
+  padding:0 0 8px; font-style:italic;
+}
+.role-input:focus{outline:none;}
+.status-pill-wrap{position:relative; flex:none;}
+select.status-select{
+  appearance:none; -webkit-appearance:none; border:1px solid var(--line); border-radius:999px;
+  padding:5px 28px 5px 12px; font-size:.72rem; font-weight:600; letter-spacing:.03em;
+  text-transform:uppercase; font-family:"IBM Plex Mono", monospace; cursor:pointer;
+  background-color:var(--gray-soft); color:var(--gray);
+  background-image:linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 15px) 55%, calc(100% - 10px) 55%; background-size:5px 5px; background-repeat:no-repeat;
+}
+select.status-select[data-status="scheduled"]{background-color:var(--accent-soft); color:var(--accent-ink,var(--accent));}
+select.status-select[data-status="awaiting-assignment"]{background-color:var(--amber-soft); color:var(--amber);}
+select.status-select[data-status="awaiting-schedule"]{background-color:var(--blue-soft); color:var(--blue);}
+select.status-select[data-status="rejected"]{background-color:var(--gray-soft); color:var(--gray);}
+select.status-select[data-status="offer"]{background-color:var(--green-soft); color:var(--green);}
+
+.meta-row{
+  display:grid; grid-template-columns: 1fr 1fr; gap:10px 16px; padding:12px 18px;
+  border-bottom:1px solid var(--line); background:var(--surface-2);
+}
+.meta-block label{
+  display:block; font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+  margin-bottom:3px; font-family:"IBM Plex Mono", monospace;
+}
+.meta-block input, .meta-block textarea{
+  width:100%; border:1px solid transparent; border-radius:6px; background:var(--surface);
+  padding:6px 8px; font-size:.86rem; color:var(--ink); font-family:inherit;
+}
+.meta-block input:focus, .meta-block textarea:focus{outline:none; border-color:var(--accent);}
+.meta-block .hint{font-size:.68rem; color:var(--muted); margin-top:3px; font-style:italic;}
+.meta-block textarea{resize:vertical; min-height:38px;}
+@media (max-width:640px){ .meta-row{grid-template-columns:1fr;} }
+
+.rounds{padding:14px 18px 18px;}
+.rounds-title{
+  font-family:"IBM Plex Mono", monospace; font-size:.68rem; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--muted); margin:0 0 10px;
+}
+.round-row{
+  display:grid; grid-template-columns: 2.6rem 1.3fr 6.2rem 1.2fr 1.2fr 6.4rem 1.6fr 1.6rem;
+  gap:8px; align-items:start; padding:8px 0; border-top:1px dashed var(--line);
+}
+.round-row:first-of-type{border-top:none;}
+.round-row input, .round-row select{
+  width:100%; border:1px solid var(--line); border-radius:6px; background:var(--surface);
+  padding:5px 7px; font-size:.79rem; color:var(--ink); font-family:inherit;
+}
+.round-row input.round-num{font-family:"IBM Plex Mono", monospace; text-align:center; color:var(--muted); background:var(--surface-2);}
+.round-row input:focus, .round-row select:focus{outline:none; border-color:var(--accent);}
+.round-row select.outcome-select{font-size:.74rem;}
+.round-del{
+  background:none; border:none; color:var(--muted); cursor:pointer; font-size:1rem; line-height:1;
+  padding:6px 0; justify-self:end;
+}
+.round-del:hover{color:#b25454;}
+.col-label{display:none;}
+@media (max-width:760px){
+  .round-row{grid-template-columns:1fr 1fr; grid-template-areas:
+    "num type" "date date" "who who" "title title" "outcome outcome" "notes notes" "del del";
+    gap:6px; padding:10px 0; position:relative;
+  }
+  .round-row .col-label{display:block; font-size:.62rem; text-transform:uppercase; color:var(--muted); margin-bottom:2px; font-family:"IBM Plex Mono", monospace;}
+  .round-row [data-field="num"]{grid-area:num;}
+  .round-row [data-field="type"]{grid-area:type;}
+  .round-row [data-field="date"]{grid-area:date;}
+  .round-row [data-field="interviewer"]{grid-area:who;}
+  .round-row [data-field="interviewerTitle"]{grid-area:title;}
+  .round-row [data-field="outcome"]{grid-area:outcome;}
+  .round-row [data-field="notes"]{grid-area:notes;}
+  .round-del{grid-area:del; justify-self:start;}
+}
+
+.btn{
+  border:1px solid var(--line); background:var(--surface); color:var(--ink-soft);
+  border-radius:8px; padding:7px 12px; font-size:.8rem; font-family:inherit; cursor:pointer;
+}
+.btn:hover{border-color:var(--accent); color:var(--accent-ink,var(--accent));}
+.add-round-btn{margin-top:10px;}
+.card-foot{display:flex; justify-content:space-between; align-items:center; padding:0 18px 16px;}
+.remove-company{color:var(--muted); font-size:.72rem; background:none; border:none; cursor:pointer; text-decoration:underline; text-underline-offset:2px;}
+.remove-company:hover{color:#b25454;}
+
+.add-company-row{display:flex; justify-content:center; margin-top:22px;}
+.add-company-row .btn{padding:9px 18px;}
+
+footer.foot-note{margin-top:34px; text-align:center; color:var(--muted); font-size:.74rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1>Interview Docket</h1>
+      <p class="subtitle">Every open role, its current round, and who you spoke to — edit any field and it saves itself.</p>
+    </div>
+    <div class="save-indicator" id="saveIndicator" data-state="idle"><span class="dot"></span><span id="saveText">Idle</span></div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="provenance">
+    <b>Interviewer data:</b> your connected inbox (isha.rathoria.3@gmail.com) had no scheduling emails naming interviewers for Razorpay or Nurix, and no confirmed interviewer for Augnito or Tekion's next round. Where a recruiter name turned up (Inito, Tekion, Revolut) it's filled in and marked <i>unconfirmed</i> — it's who reached out, not necessarily who's in the room. Fill in or correct any field below; it's saved as you go.
+  </div>
+
+  <div class="stack" id="app"></div>
+
+  <div class="add-company-row"><button class="btn" data-action="add-company">+ Add company</button></div>
+  <footer class="foot-note">Last saved <span id="lastSaved" class="mono">—</span></footer>
+</div>
+
+<script id="state-json" type="application/json">
+{
+  "seq": 100,
+  "updatedAt": "",
+  "companies": [
+    {
+      "id": "revolut", "name": "Revolut", "status": "scheduled", "roleTitle": "Strategy & Operations / Product",
+      "contact": { "name": "Marcus McLean", "title": "Global Business Recruiter, Revolut", "source": "LinkedIn InMail — unconfirmed as interviewer" },
+      "nextStep": "Prep call, then first round", "note": "",
+      "rounds": [
+        { "id": 1, "type": "Prep call", "date": "Monday", "interviewer": "", "interviewerTitle": "", "outcome": "Scheduled", "notes": "" },
+        { "id": 2, "type": "Round 1", "date": "Tuesday", "interviewer": "", "interviewerTitle": "", "outcome": "Scheduled", "notes": "" }
+      ]
+    },
+    {
+      "id": "inito", "name": "Inito", "status": "awaiting-assignment", "roleTitle": "Product Manager — Hormone Insights & Personalisation",
+      "contact": { "name": "Niyor Sarma", "title": "Talent Acquisition, Inito", "source": "LinkedIn — unconfirmed as interviewer" },
+      "nextStep": "Submit assignment; final round expected next", "note": "Recruiter says this is the second-last step before a final round.",
+      "rounds": [
+        { "id": 3, "type": "Round 1", "date": "", "interviewer": "", "interviewerTitle": "", "outcome": "Cleared", "notes": "" },
+        { "id": 4, "type": "Round 2", "date": "", "interviewer": "", "interviewerTitle": "", "outcome": "Cleared", "notes": "" },
+        { "id": 5, "type": "Assignment", "date": "", "interviewer": "", "interviewerTitle": "", "outcome": "In progress", "notes": "" }
+      ]
+    },
+    {
+      "id": "augnito", "name": "Augnito", "status": "awaiting-assignment", "roleTitle": "",
+      "contact": { "name": "", "title": "", "source": "" },
+      "nextStep": "Assignment awaited", "note": "",
+      "rounds": [
+        { "id": 6, "type": "Round 1", "date": "", "interviewer": "", "interviewerTitle": "Product Head", "outcome": "Cleared", "notes": "" },
+        { "id": 7, "type": "Assignment", "date": "", "interviewer": "", "interviewerTitle": "", "outcome": "Awaited", "notes": "" }
+      ]
+    },
+    {
+      "id": "tekion", "name": "Tekion", "status": "awaiting-schedule", "roleTitle": "",
+      "contact": { "name": "Dhruv", "title": "Associate Product Manager, Tekion Corp", "source": "LinkedIn connection request — unconfirmed as interviewer" },
+      "nextStep": "Round 1 yet to be scheduled", "note": "",
+      "rounds": []
+    },
+    {
+      "id": "razorpay", "name": "Razorpay", "status": "rejected", "roleTitle": "",
+      "contact": { "name": "", "title": "", "source": "" },
+      "nextStep": "", "note": "",
+      "rounds": []
+    },
+    {
+      "id": "nurix", "name": "Nurix", "status": "rejected", "roleTitle": "",
+      "contact": { "name": "", "title": "", "source": "" },
+      "nextStep": "", "note": "",
+      "rounds": []
+    }
+  ]
+}
+</script>
+
+<script>
+(function(){
+  var HEAD_HTML = document.head.outerHTML;
+  var SELF_SCRIPT_HTML = document.currentScript.outerHTML;
+
+  var STATUS_META = {
+    "scheduled": { label: "Scheduled", order: 0, dot: "var(--accent)" },
+    "awaiting-assignment": { label: "Assignment awaited", order: 1, dot: "var(--amber)" },
+    "awaiting-schedule": { label: "Awaiting scheduling", order: 2, dot: "var(--blue)" },
+    "rejected": { label: "Rejected", order: 3, dot: "var(--gray)" },
+    "offer": { label: "Offer", order: -1, dot: "var(--green)" }
+  };
+
+  var state = JSON.parse(document.getElementById("state-json").textContent);
+  var artifactAPI = null;
+  var saveTimer = null;
+  var expandedIds = new Set(); // which cards are expanded — session-only, not persisted
+
+  if (window.claude && window.claude.use) {
+    window.claude.use("artifact").then(function(api){ artifactAPI = api; }).catch(function(){ artifactAPI = null; });
+  }
+
+  function esc(s){
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function nextId(){ state.seq = (state.seq || 100) + 1; return state.seq; }
+
+  function renderLegend(){
+    var order = ["scheduled","awaiting-assignment","awaiting-schedule","offer","rejected"];
+    return order.map(function(k){
+      var m = STATUS_META[k];
+      return '<span><i style="background:'+m.dot+'"></i>'+esc(m.label)+'</span>';
+    }).join("");
+  }
+
+  function roundRow(companyId, r, index){
+    return '' +
+    '<div class="round-row" data-round-id="'+r.id+'">' +
+      '<div data-field="num"><span class="col-label">No.</span><input class="round-num" value="'+(index+1)+'" aria-label="Round number" readonly/></div>' +
+      '<div data-field="type"><span class="col-label">Round</span><input data-field="type" value="'+esc(r.type)+'" placeholder="e.g. Round 1" aria-label="Round label"/></div>' +
+      '<div data-field="date"><span class="col-label">Date</span><input data-field="date" value="'+esc(r.date)+'" placeholder="e.g. 15 Sep" aria-label="Date"/></div>' +
+      '<div data-field="interviewer"><span class="col-label">Interviewer</span><input data-field="interviewer" value="'+esc(r.interviewer)+'" placeholder="Name" aria-label="Interviewer name"/></div>' +
+      '<div data-field="interviewerTitle"><span class="col-label">Profile / Title</span><input data-field="interviewerTitle" value="'+esc(r.interviewerTitle)+'" placeholder="e.g. Product Head" aria-label="Interviewer title"/></div>' +
+      '<div data-field="outcome"><span class="col-label">Outcome</span><select class="outcome-select" data-field="outcome" aria-label="Outcome">' +
+        ["Scheduled","Cleared","In progress","Awaited","Rejected","No show"].map(function(o){
+          return '<option value="'+o+'"'+(o===r.outcome?" selected":"")+'>'+o+'</option>';
+        }).join("") +
+      '</select></div>' +
+      '<div data-field="notes"><span class="col-label">Notes</span><input data-field="notes" value="'+esc(r.notes)+'" placeholder="Notes" aria-label="Notes"/></div>' +
+      '<button class="round-del" data-action="del-round" title="Remove round">&times;</button>' +
+    '</div>';
+  }
+
+  function pad2(n){ return n < 10 ? "0"+n : ""+n; }
+
+  function companyCard(c, index){
+    var isOpen = expandedIds.has(c.id);
+    var rounds = (c.rounds||[]).map(function(r,i){ return roundRow(c.id, r, i); }).join("");
+    var roundCount = (c.rounds||[]).length;
+    var lastRound = roundCount ? c.rounds[roundCount-1] : null;
+    var summaryBits = [];
+    if (lastRound) summaryBits.push(esc(lastRound.type) + " — " + esc(lastRound.outcome));
+    else summaryBits.push("No rounds logged yet");
+    if (c.nextStep) summaryBits.push("<b>Next:</b> " + esc(c.nextStep));
+    else if (c.contact.name) summaryBits.push("Contact: " + esc(c.contact.name));
+
+    return '' +
+    '<section class="card'+(isOpen?" is-open":"")+'" data-company-id="'+c.id+'" data-status="'+c.status+'">' +
+      '<div class="card-head">' +
+        '<button class="toggle-btn" data-action="toggle-card" aria-expanded="'+(isOpen?"true":"false")+'" aria-label="'+(isOpen?"Collapse":"Expand")+' '+esc(c.name)+'">&#9654;</button>' +
+        '<span class="company-no">No. '+pad2(index+1)+'</span>' +
+        '<div style="flex:1 1 220px;">' +
+          '<input class="name-input" data-field="name" value="'+esc(c.name)+'" aria-label="Company name"/>' +
+          '<input class="role-input" data-field="roleTitle" value="'+esc(c.roleTitle)+'" placeholder="Role / team" aria-label="Role"/>' +
+        '</div>' +
+        '<div class="status-pill-wrap"><select class="status-select" data-field="status" data-status="'+c.status+'" aria-label="Status">' +
+          Object.keys(STATUS_META).map(function(k){
+            return '<option value="'+k+'"'+(k===c.status?" selected":"")+'>'+STATUS_META[k].label+'</option>';
+          }).join("") +
+        '</select></div>' +
+      '</div>' +
+      (isOpen ? '' : '<p class="card-summary">'+summaryBits.join(" &middot; ")+'</p>') +
+      '<div class="card-body"'+(isOpen ? '' : ' hidden')+'>' +
+        '<div class="meta-row">' +
+          '<div class="meta-block">' +
+            '<label>Contact name</label>' +
+            '<input data-field="contact-name" value="'+esc(c.contact.name)+'" placeholder="Recruiter / interviewer"/>' +
+            '<label style="margin-top:6px;">Contact title / source</label>' +
+            '<input data-field="contact-title" value="'+esc(c.contact.title)+'" placeholder="Title"/>' +
+            (c.contact.source ? '<div class="hint">'+esc(c.contact.source)+'</div>' : '') +
+          '</div>' +
+          '<div class="meta-block">' +
+            '<label>Next step</label>' +
+            '<input data-field="nextStep" value="'+esc(c.nextStep)+'" placeholder="What happens next"/>' +
+            '<label style="margin-top:6px;">Notes</label>' +
+            '<textarea data-field="note" placeholder="Anything else worth remembering">'+esc(c.note)+'</textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div class="rounds">' +
+          '<p class="rounds-title">Process flow — round log</p>' +
+          rounds +
+          '<button class="btn add-round-btn" data-action="add-round">+ Add round</button>' +
+        '</div>' +
+        '<div class="card-foot"><button class="remove-company" data-action="remove-company">Remove '+esc(c.name)+'</button></div>' +
+      '</div>' +
+    '</section>';
+  }
+
+  function sortedCompanies(){
+    return state.companies.map(function(c,i){ return {c:c,i:i}; }).sort(function(a,b){
+      var oa = (STATUS_META[a.c.status]||{}).order, ob = (STATUS_META[b.c.status]||{}).order;
+      if (oa !== ob) return oa - ob;
+      return a.i - b.i;
+    }).map(function(x){ return x.c; });
+  }
+
+  function renderAppHTML(){
+    return sortedCompanies().map(function(c,i){ return companyCard(c,i); }).join("");
+  }
+
+  function mount(){
+    document.getElementById("app").innerHTML = renderAppHTML();
+    document.getElementById("legend").innerHTML = renderLegend();
+    document.getElementById("lastSaved").textContent = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : "not yet";
+  }
+
+  function findCompany(id){
+    for (var i=0;i<state.companies.length;i++) if (state.companies[i].id === id) return state.companies[i];
+    return null;
+  }
+  function findRound(c,id){
+    for (var i=0;i<(c.rounds||[]).length;i++) if (String(c.rounds[i].id) === String(id)) return c.rounds[i];
+    return null;
+  }
+
+  function setIndicator(s){
+    var el = document.getElementById("saveIndicator");
+    el.setAttribute("data-state", s);
+    document.getElementById("saveText").textContent =
+      s === "saving" ? "Saving…" : s === "saved" ? "Saved" : s === "offline" ? "Not saved (open as artifact to save)" : s === "error" ? "Couldn't save — retrying" : "Idle";
+  }
+
+  function scheduleSave(){
+    setIndicator("saving");
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 900);
+  }
+
+  function buildFullDocument(){
+    var json = JSON.stringify(state).replace(/</g, "\\u003c");
+    var wrapClone = document.querySelector(".wrap").cloneNode(true);
+    wrapClone.querySelector("#app").innerHTML = renderAppHTML();
+    wrapClone.querySelector("#legend").innerHTML = renderLegend();
+    wrapClone.querySelector("#lastSaved").textContent = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : "not yet";
+    var ind = wrapClone.querySelector("#saveIndicator");
+    ind.setAttribute("data-state", "saved");
+    ind.querySelector("#saveText").textContent = "Saved";
+    return "<!doctype html>\n<html lang=\"en\">\n" + HEAD_HTML + "\n<body>\n" +
+      wrapClone.outerHTML +
+      '\n<script id="state-json" type="application/json">' + json + "<" + "/script>\n" +
+      SELF_SCRIPT_HTML +
+      "\n</body>\n</html>";
+  }
+
+  async function saveNow(){
+    state.updatedAt = new Date().toISOString();
+    document.getElementById("lastSaved").textContent = new Date(state.updatedAt).toLocaleString();
+    if (!artifactAPI){
+      if (window.claude && window.claude.use){
+        try { artifactAPI = await window.claude.use("artifact"); } catch(e){ artifactAPI = null; }
+      }
+    }
+    if (!artifactAPI){ setIndicator("offline"); return; }
+    try {
+      await artifactAPI.publish(buildFullDocument());
+      setIndicator("saved");
+    } catch(e){
+      setIndicator("error");
+    }
+  }
+
+  function handleFieldEvent(e){
+    var t = e.target;
+    var field = t.getAttribute("data-field");
+    if (!field) return;
+    var card = t.closest(".card");
+    var c = card && findCompany(card.getAttribute("data-company-id"));
+    if (!c) return;
+    var roundRowEl = t.closest(".round-row");
+    if (roundRowEl){
+      var r = findRound(c, roundRowEl.getAttribute("data-round-id"));
+      if (!r) return;
+      r[field] = t.value;
+      scheduleSave();
+      return;
+    }
+    if (field === "contact-name"){ c.contact.name = t.value; scheduleSave(); return; }
+    if (field === "contact-title"){ c.contact.title = t.value; scheduleSave(); return; }
+    if (field === "status"){ c.status = t.value; mount(); scheduleSave(); return; }
+    if (field === "name" || field === "roleTitle" || field === "nextStep" || field === "note"){
+      c[field] = t.value; scheduleSave(); return;
+    }
+  }
+  document.getElementById("app").addEventListener("input", handleFieldEvent);
+  document.getElementById("app").addEventListener("change", handleFieldEvent);
+
+  document.addEventListener("click", function(e){
+    var actionEl = e.target.closest("[data-action]");
+    if (!actionEl) return;
+    var action = actionEl.getAttribute("data-action");
+    var card = actionEl.closest(".card");
+    var c = card ? findCompany(card.getAttribute("data-company-id")) : null;
+
+    if (action === "toggle-card" && c){
+      if (expandedIds.has(c.id)) expandedIds.delete(c.id); else expandedIds.add(c.id);
+      mount();
+    } else if (action === "add-round" && c){
+      c.rounds = c.rounds || [];
+      c.rounds.push({ id: nextId(), type: "Round " + (c.rounds.length + 1), date: "", interviewer: "", interviewerTitle: "", outcome: "Scheduled", notes: "" });
+      mount(); scheduleSave();
+    } else if (action === "del-round" && c){
+      var row = actionEl.closest(".round-row");
+      var rid = row.getAttribute("data-round-id");
+      c.rounds = (c.rounds||[]).filter(function(r){ return String(r.id) !== String(rid); });
+      mount(); scheduleSave();
+    } else if (action === "remove-company" && c){
+      if (confirm("Remove " + c.name + " from the docket?")){
+        state.companies = state.companies.filter(function(x){ return x.id !== c.id; });
+        mount(); scheduleSave();
+      }
+    } else if (action === "add-company"){
+      var id = "company-" + nextId();
+      state.companies.push({ id: id, name: "New company", status: "awaiting-schedule", roleTitle: "", contact: {name:"",title:"",source:""}, nextStep: "", note: "", rounds: [] });
+      mount(); scheduleSave();
+    }
+  });
+
+  mount();
+})();
+</script>
+
+</body>
+</html>
